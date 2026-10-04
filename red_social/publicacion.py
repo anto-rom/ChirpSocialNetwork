@@ -1,0 +1,63 @@
+from abc import ABC, abstractmethod
+
+LIMITE_CARACTERES = 280
+
+
+class Publicacion(ABC):
+    def __init__(self, autor, texto):
+        if not texto.strip():
+            raise ValueError("El texto no puede estar vacío")
+
+        if len(texto) > LIMITE_CARACTERES:
+            raise ValueError("El texto supera el límite de caracteres")
+
+        self.autor = autor
+        self.texto = texto
+        self.me_gusta = 0
+
+    def dar_me_gusta(self):
+        self.me_gusta += 1
+
+    @staticmethod
+    def extraer_hashtags(texto):
+        hashtags = []
+
+        for palabra in texto.split():
+            if palabra.startswith("#"):
+                hashtag = palabra.rstrip(",.;:!?¡¿").lower()
+
+                if hashtag != "#" and hashtag not in hashtags:
+                    hashtags.append(hashtag)
+
+        return hashtags
+
+    @property
+    def hashtags(self):
+        return self.extraer_hashtags(self.texto)
+
+    @abstractmethod
+    def __str__(self):
+        pass
+
+
+class Tweet(Publicacion):
+    def __str__(self):
+        return f"{self.autor.alias}: {self.texto}"
+
+
+class Respuesta(Publicacion):
+    def __init__(self, autor, texto, original):
+        super().__init__(autor, texto)
+        self.original = original
+
+    def __str__(self):
+        return f"{self.autor.alias} ↩ {self.original.autor.alias}: {self.texto}"
+
+
+class Retweet(Publicacion):
+    def __init__(self, autor, original):
+        super().__init__(autor, original.texto)
+        self.original = original
+
+    def __str__(self):
+        return f"{self.autor.alias} 🔁 {self.original}"
